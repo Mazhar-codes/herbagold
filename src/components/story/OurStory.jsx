@@ -1,6 +1,6 @@
 import React from 'react';
 // import storyImg from '../../assets/brand-story.jpg'; // Enable this once the file is added to src/assets/
-const storyImg = "https://images.unsplash.com/photo-1611080626919-7cf5a969fc8f?auto=format&fit=crop&q=80&w=1200"; // Premium Herbal/Nature placeholder
+const storyImg = "https://res.cloudinary.com/dbjnnflrz/image/upload/v1778245136/herbagold_assets/brand_story.jpg";
 
 const OurStory = () => {
     return (
