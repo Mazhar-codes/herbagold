@@ -9,9 +9,11 @@ const Update = () => {
     const oneproduct = useLoaderData();
     const { _id, name, brandname, category, photourl, price, rating, shortDesc, isBundle: initialIsBundle } = oneproduct;
     const [uploading, setUploading] = useState(false);
+    const [galleryUploading, setGalleryUploading] = useState(false);
     const [inStock, setInStock] = useState(oneproduct.inStock !== false);
     const [isBundle, setIsBundle] = useState(oneproduct.isBundle === true || oneproduct.isBundle === 'true');
     const [photoUrl, setPhotoUrl] = useState(photourl);
+    const [gallery, setGallery] = useState(oneproduct.gallery || []);
 
     const handleImageUpload = async (e) => {
         const imageFile = e.target.files[0];
@@ -52,29 +54,62 @@ const Update = () => {
         }
     };
 
+    const handleGalleryUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        setGalleryUploading(true);
+        Swal.fire({
+            title: 'Uploading Gallery...',
+            text: `Processing ${files.length} images...`,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        const newGalleryUrls = [];
+        const options = { maxSizeMB: 0.4, maxWidthOrHeight: 1024, useWebWorker: true };
+
+        try {
+            for (const file of files) {
+                const compressedFile = await imageCompression(file, options);
+                const formData = new FormData();
+                formData.append('file', compressedFile);
+                formData.append('upload_preset', 'ml_default');
+
+                const response = await axios.post(`https://api.cloudinary.com/v1_1/dbjnnflrz/image/upload`, formData);
+                if (response.data.secure_url) {
+                    newGalleryUrls.push(response.data.secure_url);
+                }
+            }
+            setGallery([...gallery, ...newGalleryUrls]);
+            Swal.fire('Success!', `${newGalleryUrls.length} gallery images uploaded.`, 'success');
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'Some gallery images failed to upload', 'error');
+        } finally {
+            setGalleryUploading(false);
+        }
+    };
+
+    const removeGalleryImage = (index) => {
+        setGallery(gallery.filter((_, i) => i !== index));
+    };
+
     const handleUpdate = event => {
         event.preventDefault();
         const form = event.target;
 
-        const name = form.name.value;
-        const brandname = form.brandname.value;
-        const category = form.category.value;
-        const price = form.price.value;
-        const rating = form.rating.value;
-        const shortDesc = form.shortDesc.value;
-        const photourl = photoUrl; // Use state
-        const inStockVal = inStock; // Use state instead of form.inStock.checked
-
         const updateProduct = { 
-            name, 
-            brandname, 
-            category, 
-            photourl, 
-            price: parseFloat(price), 
-            rating: parseFloat(rating), 
-            shortDesc, 
+            name: form.name.value, 
+            brandname: form.brandname.value, 
+            category: form.category.value, 
+            photourl: photoUrl, 
+            price: parseFloat(form.price.value), 
+            rating: parseFloat(form.rating.value), 
+            shortDesc: form.shortDesc.value, 
             inStock: !!inStock, 
-            isBundle: !!isBundle
+            isBundle: !!isBundle,
+            gallery
         };
 
         console.log('Sending update:', updateProduct);
@@ -89,7 +124,7 @@ const Update = () => {
             if (data.success || data.modifiedCount > 0) {
                 Swal.fire({
                     title: 'Updated!',
-                    text: 'Product has been updated successfully.',
+                    text: 'Product and gallery have been updated successfully.',
                     icon: 'success',
                     confirmButtonColor: '#D4AF37'
                 });
@@ -143,7 +178,7 @@ const Update = () => {
                         </div>
 
                         <div className="form-control">
-                            <label className="text-sm font-bold mb-1 text-gray-500">Product Image</label>
+                            <label className="text-sm font-bold mb-1 text-gray-500">Main Product Image (Thumbnail)</label>
                             <div className="flex flex-col md:flex-row gap-3">
                                 <div className="flex-1">
                                     <input 
@@ -168,12 +203,40 @@ const Update = () => {
                                         htmlFor="fileUpload" 
                                         className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold cursor-pointer transition-all ${uploading ? 'bg-gray-300' : 'bg-black text-white hover:bg-[#D4AF37]'}`}
                                     >
-                                        {uploading ? 'Processing...' : 'Upload File'}
+                                        {uploading ? 'Processing...' : 'Upload Main'}
                                     </label>
                                 </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 mt-1 italic">* Images are automatically compressed to keep your site fast.</p>
                         </div>
+
+                        <div className="form-control">
+                            <label className="text-sm font-bold mb-1 text-gray-500">Product Gallery (Side Pictures)</label>
+                            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                                <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-4">
+                                    {gallery.map((url, index) => (
+                                        <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                                            <img src={url} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
+                                            <button 
+                                                type="button"
+                                                onClick={() => removeGalleryImage(index)}
+                                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <label className="flex flex-col items-center justify-center aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-[#D4AF37] cursor-pointer transition-colors bg-white dark:bg-gray-900">
+                                        <input type="file" multiple accept="image/*" onChange={handleGalleryUpload} className="hidden" disabled={galleryUploading} />
+                                        <span className="text-2xl text-gray-400">+</span>
+                                        <span className="text-[10px] text-gray-400 uppercase font-bold">Add</span>
+                                    </label>
+                                </div>
+                                <p className="text-[10px] text-gray-400 italic">Manage the side pictures for this product.</p>
+                            </div>
+                        </div>
+
 
                         <div className='grid grid-cols-1 lg:grid-cols-2 gap-5'>
                             <div className="form-control">

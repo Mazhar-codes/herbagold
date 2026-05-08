@@ -13,7 +13,14 @@ const ViewDetail = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
   const { _id, name, brandname, category, photourl, price, rating, shortDesc } = detail;
+  const [selectedImage, setSelectedImage] = useState(photourl);
+  
+  // Update selected image if data changes
+  React.useEffect(() => {
+    setSelectedImage(photourl);
+  }, [photourl]);
 
+  const images = [photourl, ...(detail.gallery || [])];
   const handleCart = async () => {
     if (!user) {
       Swal.fire({
@@ -135,19 +142,41 @@ const ViewDetail = () => {
         <div className="bg-white dark:bg-[#141414] rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
           <div className="grid grid-cols-1 lg:grid-cols-2">
 
-            {/* === LEFT: Product Image === */}
-            <div className="relative bg-gradient-to-br from-amber-50 to-yellow-50/50 dark:from-[#1a1a1a] dark:to-[#111] flex items-center justify-center p-10 min-h-[400px]">
+            {/* === LEFT: Product Image & Gallery === */}
+            <div className="relative bg-gradient-to-br from-amber-50 to-yellow-50/50 dark:from-[#1a1a1a] dark:to-[#111] flex flex-col items-center justify-center p-6 lg:p-10 min-h-[400px]">
               {/* Decorative glow */}
               <div className="absolute inset-0 bg-[#D4AF37]/5 rounded-l-3xl"></div>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#D4AF37]/10 rounded-full blur-3xl"></div>
 
-              <div className="relative z-10">
-                <img
-                  className='max-h-[460px] w-auto rounded-2xl shadow-2xl object-contain transform hover:scale-105 transition-transform duration-500'
-                  src={photourl}
-                  alt={name}
-                  loading="lazy"
-                />
+              <div className="relative z-10 w-full flex flex-col items-center">
+                {/* Main Large Image */}
+                <div className="w-full aspect-square max-h-[460px] flex items-center justify-center mb-6">
+                  <img
+                    className='max-h-full max-w-full rounded-2xl shadow-2xl object-contain transform hover:scale-105 transition-transform duration-500'
+                    src={selectedImage}
+                    alt={name}
+                    loading="lazy"
+                  />
+                </div>
+
+                {/* Thumbnails Gallery */}
+                {images.length > 1 && (
+                  <div className="flex flex-wrap justify-center gap-3 w-full max-w-md">
+                    {images.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(img)}
+                        className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all transform hover:scale-110 ${
+                          selectedImage === img 
+                            ? 'border-[#D4AF37] shadow-md scale-110' 
+                            : 'border-transparent opacity-60 hover:opacity-100'
+                        }`}
+                      >
+                        <img src={img} alt={`Side view ${index}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Category badge */}
