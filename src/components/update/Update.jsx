@@ -86,7 +86,7 @@ const Update = () => {
         })
         .then(res => res.json())
         .then(data => {
-            if (data.modifiedCount > 0) {
+            if (data.success || data.modifiedCount > 0) {
                 Swal.fire({
                     title: 'Updated!',
                     text: 'Product has been updated successfully.',
@@ -95,9 +95,9 @@ const Update = () => {
                 });
             } else {
                 Swal.fire({
-                    title: 'No Changes',
-                    text: 'You didn\'t change anything.',
-                    icon: 'info',
+                    title: 'Error',
+                    text: 'Could not find product to update.',
+                    icon: 'error',
                     confirmButtonColor: '#D4AF37'
                 });
             }
