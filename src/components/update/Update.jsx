@@ -79,13 +79,13 @@ const Update = () => {
 
         console.log('Sending update:', updateProduct);
 
-        fetch(`${API_BASE_URL}/brand/update/${_id}`, {
+        fetch(`${API_BASE_URL}/brand/update/${_id?.toString() || _id}`, {
             method: 'PUT',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(updateProduct)
         })
-        .then(res => res.json())
-        .then(data => {
+        .then(res => res.json().then(data => ({ status: res.status, data })))
+        .then(({ status, data }) => {
             if (data.success || data.modifiedCount > 0) {
                 Swal.fire({
                     title: 'Updated!',
@@ -96,11 +96,15 @@ const Update = () => {
             } else {
                 Swal.fire({
                     title: 'Error',
-                    text: 'Could not find product to update.',
+                    text: data.error || 'Could not find product to update.',
                     icon: 'error',
+                    footer: `ID: ${_id?.toString() || _id} | Status: ${status}`,
                     confirmButtonColor: '#D4AF37'
                 });
             }
+        })
+        .catch(err => {
+            Swal.fire('Network Error', err.message, 'error');
         });
     };
 
