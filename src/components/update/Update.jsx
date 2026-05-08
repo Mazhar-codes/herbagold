@@ -11,6 +11,7 @@ const Update = () => {
     const [uploading, setUploading] = useState(false);
     const [inStock, setInStock] = useState(oneproduct.inStock !== false);
     const [isBundle, setIsBundle] = useState(oneproduct.isBundle === true || oneproduct.isBundle === 'true');
+    const [photoUrl, setPhotoUrl] = useState(photourl);
 
     const handleImageUpload = async (e) => {
         const imageFile = e.target.files[0];
@@ -40,7 +41,7 @@ const Update = () => {
             
             if (response.data.secure_url) {
                 const url = response.data.secure_url;
-                document.getElementsByName('photourl')[0].value = url;
+                setPhotoUrl(url); // Update state instead of DOM directly
                 Swal.fire('Success!', 'Image optimized and uploaded to Cloudinary.', 'success');
             }
         } catch (error) {
@@ -58,10 +59,10 @@ const Update = () => {
         const name = form.name.value;
         const brandname = form.brandname.value;
         const category = form.category.value;
-        const photourl = form.photourl.value;
         const price = form.price.value;
         const rating = form.rating.value;
         const shortDesc = form.shortDesc.value;
+        const photourl = photoUrl; // Use state
         const inStockVal = inStock; // Use state instead of form.inStock.checked
 
         const updateProduct = { 
@@ -141,7 +142,14 @@ const Update = () => {
                             <label className="text-sm font-bold mb-1 text-gray-500">Product Image</label>
                             <div className="flex flex-col md:flex-row gap-3">
                                 <div className="flex-1">
-                                    <input type="text" name="photourl" defaultValue={photourl} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-[#D4AF37]" required />
+                                    <input 
+                                        type="text" 
+                                        name="photourl" 
+                                        value={photoUrl} 
+                                        onChange={(e) => setPhotoUrl(e.target.value)}
+                                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-[#D4AF37]" 
+                                        required 
+                                    />
                                 </div>
                                 <div className="relative">
                                     <input 
