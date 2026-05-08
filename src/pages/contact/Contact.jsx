@@ -3,6 +3,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { FaEnvelope, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
 import  { useRef } from 'react';
 import emailjs from '@emailjs/browser';
+import Swal from 'sweetalert2';
 
 const ContactMe = () => {
   const form = useRef();
@@ -10,11 +11,30 @@ const ContactMe = () => {
   const sendEmail = (e) => {
     e.preventDefault();
 
+    Swal.fire({
+      title: 'Sending...',
+      text: 'Please wait while we deliver your message.',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
     emailjs.sendForm('service_bkqeskg', 'template_q27r159', form.current, 'lfBV0ogI4aslzcoKx')
       .then((result) => {
-          console.log(result.text);
+          Swal.fire({
+            title: 'Message Sent!',
+            text: 'We have received your message and will get back to you soon.',
+            icon: 'success',
+            confirmButtonColor: '#D4AF37'
+          });
+          form.current.reset();
       }, (error) => {
-          console.log(error.text);
+          console.error('EmailJS Error:', error);
+          Swal.fire({
+            title: 'Error',
+            text: 'Failed to send message. Please try again or use WhatsApp.',
+            icon: 'error',
+            confirmButtonColor: '#D4AF37'
+          });
       });
   };
 
