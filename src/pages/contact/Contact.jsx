@@ -30,9 +30,9 @@ const ContactMe = () => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(data)
     })
-      .then(res => res.json())
-      .then((result) => {
-          if (result.success) {
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+          if (data.success) {
             Swal.fire({
                 title: 'Message Sent!',
                 text: 'We have received your message and will get back to you soon.',
@@ -41,15 +41,16 @@ const ContactMe = () => {
               });
               form.current.reset();
           } else {
-              throw new Error(result.error || 'Failed to send');
+              throw new Error(data.error || 'Failed to send');
           }
       })
       .catch((error) => {
           console.error('Contact Error:', error);
           Swal.fire({
             title: 'Error',
-            text: 'Failed to send message. Please try again or use WhatsApp.',
+            text: `Failed to send message: ${error.message}`,
             icon: 'error',
+            footer: 'Please try again or use WhatsApp.',
             confirmButtonColor: '#D4AF37'
           });
       });
