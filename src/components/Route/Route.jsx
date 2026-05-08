@@ -20,6 +20,9 @@ import { API_BASE_URL } from '../../config';
 import AdminSettings from '../../pages/admin/AdminSettings';
 import TrackOrder from '../../pages/trackOrder/TrackOrder';
 import AdminOrders from '../../pages/manageProduct/AdminOrders';
+import Bundles from '../../pages/bundles/Bundles';
+import Wishlist from '../../pages/wishlist/Wishlist';
+import AdminWishlist from '../../pages/admin/AdminWishlist';
 
 const router = createBrowserRouter([
     {
@@ -84,6 +87,18 @@ const router = createBrowserRouter([
         },
 
        
+        {
+          path: "/bundles",
+          element: <Bundles></Bundles>,
+        },
+        {
+          path: "/wishlist",
+          element: <PrivateRoute><Wishlist></Wishlist></PrivateRoute>,
+        },
+        {
+          path: "/admin/wishlist",
+          element: <AdminRoute><AdminWishlist></AdminWishlist></AdminRoute>,
+        },
         {
           path: "/myCart",
           element:<PrivateRoute><MyCart></MyCart></PrivateRoute>,

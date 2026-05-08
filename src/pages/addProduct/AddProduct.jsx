@@ -7,6 +7,8 @@ import imageCompression from 'browser-image-compression';
 
 const AddProduct = () => {
     const [uploading, setUploading] = useState(false);
+    const [inStock, setInStock] = useState(true);
+    const [isBundle, setIsBundle] = useState(false);
 
     const handleImageUpload = async (e) => {
         const imageFile = e.target.files[0];
@@ -35,7 +37,7 @@ const AddProduct = () => {
             formData.append('file', compressedFile);
             formData.append('upload_preset', 'ml_default');
 
-            const response = await axios.post(`https://api.cloudinary.com/v1_1/YOUR_NEW_CLOUD_NAME/image/upload`, formData); // Old: dbjnnflrz
+            const response = await axios.post(`https://api.cloudinary.com/v1_1/dbjnnflrz/image/upload`, formData);
             
             if (response.data.secure_url) {
                 const url = response.data.secure_url;
@@ -62,10 +64,13 @@ const AddProduct = () => {
         const price = form.price.value;
         const rating = form.rating.value;
         const shortDesc = form.shortDesc.value;
-        const inStock = form.inStock.checked;
+        const inStockVal = inStock;
        
 
-        const newproduct = { name, brandname,category, photourl, price, rating, shortDesc, inStock};
+        const newproduct = { 
+            name, brandname, category, photourl, price, rating, shortDesc, inStock: inStockVal,
+            isBundle
+        };
 
         console.log(newproduct);
 
@@ -174,9 +179,27 @@ const AddProduct = () => {
                         <textarea placeholder="Tell us about this product..." name="shortDesc" rows="3" className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-[#D4AF37]" required></textarea>
                     </div>
 
-                    <div className="form-control flex flex-row items-center gap-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3">
-                        <input type="checkbox" id="inStock" name="inStock" defaultChecked className="w-5 h-5 accent-[#D4AF37]" />
-                        <label htmlFor="inStock" className="text-sm font-bold text-gray-700 dark:text-gray-300">Product is In Stock</label>
+                    <div className="form-control flex flex-row items-center gap-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 cursor-pointer" onClick={() => setInStock(!inStock)}>
+                        <input 
+                            type="checkbox" 
+                            id="inStock" 
+                            name="inStock" 
+                            checked={inStock}
+                            onChange={(e) => setInStock(e.target.checked)}
+                            className="w-5 h-5 accent-[#D4AF37]" 
+                        />
+                        <label htmlFor="inStock" className="text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer">Product is In Stock</label>
+                    </div>
+
+                    <div className="form-control flex flex-row items-center gap-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl px-4 py-3 cursor-pointer" onClick={() => setIsBundle(!isBundle)}>
+                        <input 
+                            type="checkbox" 
+                            id="isBundle" 
+                            checked={isBundle}
+                            onChange={(e) => setIsBundle(e.target.checked)} // Controlled by div click
+                            className="w-5 h-5 accent-[#D4AF37]" 
+                        />
+                        <label htmlFor="isBundle" className="text-sm font-bold text-[#D4AF37] cursor-pointer">This is a Bundle Offer</label>
                     </div>
 
                     <button type="submit" className='w-full py-4 bg-[#D4AF37] text-white font-bold text-lg rounded-xl hover:bg-black transition-all transform hover:-translate-y-1 shadow-lg mt-4'>

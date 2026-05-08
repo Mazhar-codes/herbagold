@@ -7,20 +7,27 @@ const AdminSettings = () => {
     const [announcements, setAnnouncements] = useState([]);
     const [newAnnouncement, setNewAnnouncement] = useState('');
     const [coupons, setCoupons] = useState([]);
+    const [orders, setOrders] = useState([]);
     const [newCoupon, setNewCoupon] = useState({ code: '', discount: '', influencer: '', usageLimit: '' });
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState('active'); // 'active' or 'history'
+    const [influencerSearch, setInfluencerSearch] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [settingsRes, couponsRes] = await Promise.all([
+                const [settingsRes, couponsRes, ordersRes] = await Promise.all([
                     fetch(`${API_BASE_URL}/settings`),
-                    fetch(`${API_BASE_URL}/coupons`)
+                    fetch(`${API_BASE_URL}/coupons`),
+                    fetch(`${API_BASE_URL}/orders`)
                 ]);
                 const settingsData = await settingsRes.json();
                 const couponsData = await couponsRes.json();
+                const ordersData = await ordersRes.json();
                 setAnnouncements(settingsData.texts || []);
                 setCoupons(couponsData || []);
+                setOrders(ordersData || []);
                 setLoading(false);
             } catch (err) {
                 console.error(err);
@@ -89,17 +96,31 @@ const AdminSettings = () => {
         }
     };
 
-    const handleDeleteCoupon = async (id) => {
-        try {
-            const res = await fetch(`${API_BASE_URL}/coupons/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setCoupons(coupons.filter(c => c._id !== id));
-                Swal.fire('Deleted', 'Coupon removed', 'success');
-            }
-        } catch (err) {
-            Swal.fire('Error', 'Failed to delete coupon', 'error');
-        }
+    const getInfluencerStats = (influencerName) => {
+        if (!influencerName) return null;
+        
+        const influencerOrders = orders.filter(order => 
+            order.influencerName?.toLowerCase() === influencerName.toLowerCase() ||
+            order.promoCode?.toLowerCase().includes(influencerName.toLowerCase())
+        );
+
+        const totalOrders = influencerOrders.length;
+        const totalProducts = influencerOrders.reduce((sum, order) => 
+            sum + order.items.reduce((itemSum, item) => itemSum + (item.quantity || 1), 0), 0
+        );
+        const totalSales = influencerOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+        const totalDiscount = influencerOrders.reduce((sum, order) => sum + (order.discountAmount || 0), 0);
+
+        return { totalOrders, totalProducts, totalSales, totalDiscount };
     };
+
+    const filteredCoupons = coupons.filter(coupon => 
+        (activeTab === 'active' ? coupon.isActive : !coupon.isActive) &&
+        (coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) || 
+         coupon.influencer.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    const stats = influencerSearch ? getInfluencerStats(influencerSearch) : null;
 
     if (loading) return <div className="p-10 text-center">Loading settings...</div>;
 
@@ -140,14 +161,52 @@ const AdminSettings = () => {
 
                 {/* Coupons Section */}
                 <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">🎫 Manage Coupons & Influencers</h2>
-                    <form onSubmit={handleAddCoupon} className="grid grid-cols-1 md:grid-cols-5 gap-2 mb-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <h2 className="text-xl font-bold flex items-center gap-2">🎫 Manage Coupons & Influencers</h2>
+                        
+                        {/* Influencer Search Analysis */}
+                        <div className="relative w-full md:w-72">
+                            <input 
+                                type="text" 
+                                placeholder="🔍 Search Influencer Stats..." 
+                                value={influencerSearch}
+                                onChange={(e) => setInfluencerSearch(e.target.value)}
+                                className="w-full bg-amber-50 dark:bg-amber-900/10 border border-[#D4AF37]/30 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-[#D4AF37]"
+                            />
+                            {stats && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border border-[#D4AF37]/20 z-20">
+                                    <h4 className="font-bold text-[#D4AF37] mb-2">Performance: {influencerSearch}</h4>
+                                    <div className="grid grid-cols-2 gap-3 text-xs">
+                                        <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
+                                            <p className="text-gray-400">Orders</p>
+                                            <p className="font-bold text-lg">{stats.totalOrders}</p>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
+                                            <p className="text-gray-400">Products Sold</p>
+                                            <p className="font-bold text-lg text-green-600">{stats.totalProducts}</p>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
+                                            <p className="text-gray-400">Total Sales</p>
+                                            <p className="font-bold">PKR {stats.totalSales.toFixed(0)}</p>
+                                        </div>
+                                        <div className="bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
+                                            <p className="text-gray-400">Discounts Given</p>
+                                            <p className="font-bold text-red-500">PKR {stats.totalDiscount.toFixed(0)}</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setInfluencerSearch('')} className="w-full mt-3 text-[10px] text-gray-400 uppercase font-bold hover:text-red-500">Close Analysis</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleAddCoupon} className="grid grid-cols-1 md:grid-cols-5 gap-2 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
                         <input 
                             type="text" 
-                            placeholder="Code" 
+                            placeholder="Code (e.g. JOE10)" 
                             value={newCoupon.code}
                             onChange={(e) => setNewCoupon({...newCoupon, code: e.target.value})}
-                            className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2"
+                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2"
                             required
                         />
                         <input 
@@ -155,29 +214,54 @@ const AdminSettings = () => {
                             placeholder="Discount %" 
                             value={newCoupon.discount}
                             onChange={(e) => setNewCoupon({...newCoupon, discount: e.target.value})}
-                            className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2"
+                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2"
                             required
                         />
                         <input 
                             type="text" 
-                            placeholder="Influencer" 
+                            placeholder="Influencer Name" 
                             value={newCoupon.influencer}
                             onChange={(e) => setNewCoupon({...newCoupon, influencer: e.target.value})}
-                            className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2"
+                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2"
                             required
                         />
                         <input 
                             type="number" 
-                            placeholder="Limit (e.g. 100)" 
+                            placeholder="Usage Limit" 
                             value={newCoupon.usageLimit}
                             onChange={(e) => setNewCoupon({...newCoupon, usageLimit: e.target.value})}
-                            className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2"
+                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2"
                             required
                         />
                         <button type="submit" className="bg-[#D4AF37] text-white font-bold rounded-xl hover:bg-black transition-all">
-                            Add
+                            Add Promo
                         </button>
                     </form>
+
+                    {/* Tabs & Filter */}
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+                            <button 
+                                onClick={() => setActiveTab('active')}
+                                className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'active' ? 'bg-white dark:bg-gray-700 shadow-sm text-[#D4AF37]' : 'text-gray-500'}`}
+                            >
+                                Active Codes
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('history')}
+                                className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'history' ? 'bg-white dark:bg-gray-700 shadow-sm text-[#D4AF37]' : 'text-gray-500'}`}
+                            >
+                                History
+                            </button>
+                        </div>
+                        <input 
+                            type="text" 
+                            placeholder="Filter list..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="bg-transparent border-b border-gray-200 dark:border-gray-700 px-4 py-1 text-sm focus:outline-none focus:border-[#D4AF37]"
+                        />
+                    </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -192,31 +276,37 @@ const AdminSettings = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {coupons.map((coupon) => (
-                                    <tr key={coupon._id} className="border-b border-gray-50 dark:border-gray-800/50">
-                                        <td className="py-3 font-bold text-[#D4AF37]">{coupon.code}</td>
-                                        <td className="py-3">{coupon.discount}%</td>
-                                        <td className="py-3">{coupon.influencer}</td>
-                                        <td className="py-3">
-                                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${coupon.usedCount >= coupon.usageLimit ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                                                {coupon.usedCount || 0} / {coupon.usageLimit}
-                                            </span>
-                                        </td>
-                                        <td className="py-3">
-                                            <button 
-                                                onClick={() => handleToggleCoupon(coupon._id, coupon.isActive)}
-                                                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${coupon.isActive ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'}`}
-                                            >
-                                                {coupon.isActive ? 'Enabled' : 'Disabled'}
-                                            </button>
-                                        </td>
-                                        <td className="py-3 text-right">
-                                            <button onClick={() => handleDeleteCoupon(coupon._id)} className="text-red-500 hover:text-red-700 p-2">
-                                                <FaTrash />
-                                            </button>
-                                        </td>
+                                {filteredCoupons.length > 0 ? (
+                                    filteredCoupons.map((coupon) => (
+                                        <tr key={coupon._id} className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                                            <td className="py-3 font-bold text-[#D4AF37]">{coupon.code}</td>
+                                            <td className="py-3">{coupon.discount}%</td>
+                                            <td className="py-3">{coupon.influencer}</td>
+                                            <td className="py-3">
+                                                <span className={`px-2 py-1 rounded-lg text-xs font-bold ${coupon.usedCount >= coupon.usageLimit ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                    {coupon.usedCount || 0} / {coupon.usageLimit}
+                                                </span>
+                                            </td>
+                                            <td className="py-3">
+                                                <button 
+                                                    onClick={() => handleToggleCoupon(coupon._id, coupon.isActive)}
+                                                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${coupon.isActive ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'}`}
+                                                >
+                                                    {coupon.isActive ? 'Active' : 'Disabled'}
+                                                </button>
+                                            </td>
+                                            <td className="py-3 text-right">
+                                                <button onClick={() => handleDeleteCoupon(coupon._id)} className="text-red-400 hover:text-red-600 p-2 transition-colors">
+                                                    <FaTrash />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="6" className="py-10 text-center text-gray-400 italic">No coupons found in this section.</td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>

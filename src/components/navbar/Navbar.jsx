@@ -52,6 +52,8 @@ const Navbar = () => {
     <>
       <NavLink to="/" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Home</NavLink>
       <NavLink to={`/brand/HERBA GOLD`} onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Shop</NavLink>
+      <NavLink to="/bundles" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Bundles 🎁</NavLink>
+      <NavLink to="/wishlist" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Wishlist ❤️</NavLink>
       <NavLink to="/track-order" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Track Order 📦</NavLink>
       <NavLink to="/contactus" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Contact</NavLink>
       <a href="https://wa.me/923155757274" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-600 hover:text-green-700 font-semibold transition-colors">
@@ -64,7 +66,9 @@ const Navbar = () => {
     <>
       <NavLink to="/" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Home</NavLink>
       <NavLink to="/manageproduct" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Products</NavLink>
+      <NavLink to="/bundles" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Bundles 🎁</NavLink>
       <NavLink to="/admin/orders" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Orders 📦</NavLink>
+      <NavLink to="/admin/wishlist" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Wishlists ❤️</NavLink>
       <NavLink to="/adminsettings" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Settings</NavLink>
       <NavLink to="/contactus" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? activeLink : normalLink}>Contact</NavLink>
     </>

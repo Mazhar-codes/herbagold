@@ -17,6 +17,11 @@ const BrandlProductCard = ({oneproduct}) => {
                 <span className="absolute top-3 right-3 px-3 py-1 bg-[#D4AF37] text-white text-xs font-bold rounded-full">
                     {category}
                 </span>
+                {oneproduct.isBundle && (
+                    <span className="absolute top-3 left-3 px-3 py-1 bg-red-600 text-white text-[10px] font-bold rounded-full uppercase tracking-widest shadow-lg animate-pulse">
+                        🎁 Bundle Offer
+                    </span>
+                )}
             </div>
 
             <div className="p-5">

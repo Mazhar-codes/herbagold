@@ -260,6 +260,19 @@ const ViewDetail = () => {
           </div>
         </div>
 
+        {/* === BUNDLE SECTION === */}
+        {detail.isBundle && (
+          <div className="mt-10 p-8 lg:p-12 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/5 rounded-[2rem] border border-[#D4AF37]/20 shadow-inner text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 bg-[#D4AF37] text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg transform -rotate-6">🎁</div>
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 dark:text-white">Exclusive Bundle Offer</h3>
+                <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-xl">This is a special curated collection. Check the description above for full details on what's included in this premium set.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Customer Reviews Section */}
         <div className="mt-16 pt-16 border-t border-gray-100 dark:border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
