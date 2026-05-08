@@ -82,7 +82,21 @@ const MyCart = () => {
            html:
                '<input id="swal-name" class="swal2-input" placeholder="Full Name (e.g. Ahmed Khan)" required>' +
                '<input id="swal-phone" class="swal2-input" placeholder="Phone (e.g. 03001234567)" required>' +
-               '<input id="swal-address" class="swal2-input" placeholder="Delivery Address (House, Street, City)" required>' +
+               '<select id="swal-city" class="swal2-select" style="display: flex; width: 80%; margin: 1em auto;">' +
+                   '<option value="" disabled selected>Select Your City</option>' +
+                   '<option value="Islamabad">Islamabad</option>' +
+                   '<option value="Rawalpindi">Rawalpindi</option>' +
+                   '<option value="Lahore">Lahore</option>' +
+                   '<option value="Karachi">Karachi</option>' +
+                   '<option value="Faisalabad">Faisalabad</option>' +
+                   '<option value="Multan">Multan</option>' +
+                   '<option value="Peshawar">Peshawar</option>' +
+                   '<option value="Quetta">Quetta</option>' +
+                   '<option value="Sialkot">Sialkot</option>' +
+                   '<option value="Gujranwala">Gujranwala</option>' +
+                   '<option value="Others">Other Cities</option>' +
+               '</select>' +
+               '<input id="swal-address" class="swal2-input" placeholder="Detailed Address (House#, Street#)" required>' +
                '<textarea id="swal-notes" class="swal2-textarea" placeholder="Any notes (optional)"></textarea>',
            focusConfirm: false,
            showCancelButton: true,
@@ -92,48 +106,42 @@ const MyCart = () => {
            preConfirm: () => {
                const name = document.getElementById('swal-name').value.trim();
                const phone = document.getElementById('swal-phone').value.trim();
+               const city = document.getElementById('swal-city').value;
                const address = document.getElementById('swal-address').value.trim();
                const notes = document.getElementById('swal-notes').value.trim();
 
-               // Name: at least 3 chars, only letters and spaces
                if (!name || name.length < 3) {
-                   Swal.showValidationMessage('❌ Please enter your full name (at least 3 characters)');
+                   Swal.showValidationMessage('❌ Please enter your full name');
                    return false;
                }
-               if (!/^[a-zA-Z\s]+$/.test(name)) {
-                   Swal.showValidationMessage('❌ Name should contain letters only (no numbers or symbols)');
-                   return false;
-               }
-
-               // Phone: Pakistani format — 03XX-XXXXXXX or +923XX-XXXXXXX
-               const phoneDigits = phone.replace(/[\s\-]/g, '');
-               const pkPhoneRegex = /^(\+92|0092|0)3[0-9]{9}$/;
                if (!phone) {
                    Swal.showValidationMessage('❌ Please enter your phone number');
                    return false;
                }
-               if (!pkPhoneRegex.test(phoneDigits)) {
-                   Swal.showValidationMessage('❌ Enter a valid Pakistani number (e.g. 03001234567 or +923001234567)');
+               if (!city) {
+                   Swal.showValidationMessage('❌ Please select your city');
+                   return false;
+               }
+               if (!address || address.length < 5) {
+                   Swal.showValidationMessage('❌ Please enter your full delivery address');
                    return false;
                }
 
-               // Address: minimum 10 characters
-               if (!address || address.length < 10) {
-                   Swal.showValidationMessage('❌ Please enter your full delivery address (at least 10 characters)');
-                   return false;
-               }
-
-               return { name, phone: phoneDigits, address, notes };
+               return { name, phone, city, address, notes };
            }
        });
 
        if (formValues) {
            setOrderLoading(true);
            try {
+               const city = document.getElementById('swal-city').value;
+               const shippingFee = (city === 'Islamabad' || city === 'Rawalpindi') ? 250 : 300;
+               
                const orderData = {
                    customerName: formValues.name,
                    customerEmail: user.email,
                    customerPhone: formValues.phone,
+                   city: formValues.city,
                    deliveryAddress: formValues.address,
                    notes: formValues.notes,
                    items: cart.map(item => ({
@@ -143,7 +151,8 @@ const MyCart = () => {
                        subtotal: parseFloat(item.price) * (quantities[item._id] || 1),
                        productId: item.productId || item._id
                    })),
-                   totalPrice: totalPrice,
+                   shippingFee: shippingFee,
+                   totalPrice: totalPrice + shippingFee,
                    totalItems: totalItems,
                    promoCode: appliedCoupon?.code,
                    influencerName: appliedCoupon?.influencer,
@@ -249,7 +258,7 @@ const MyCart = () => {
 
                            <div className="flex justify-between text-sm mb-2">
                                <span className="text-gray-600 dark:text-gray-400">Shipping</span>
-                               <span className="font-bold text-green-600">Free</span>
+                               <span className="font-bold text-gray-500">Calculated at checkout</span>
                            </div>
 
                            {appliedCoupon && (

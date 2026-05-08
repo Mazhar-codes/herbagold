@@ -107,8 +107,12 @@ const Wishlist = () => {
                                                 <span className="font-bold text-[#D4AF37]">PKR {item.price}</span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="badge badge-success badge-sm text-white font-bold">In Stock</span>
-                                            </td>
+                                                 {item.productDetails?.inStock !== false ? (
+                                                     <span className="badge badge-success badge-sm text-white font-bold">In Stock</span>
+                                                 ) : (
+                                                     <span className="badge badge-error badge-sm text-white font-bold">Out of Stock</span>
+                                                 )}
+                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex justify-center gap-2">
                                                     <Link to={`/viewDetail/${item.productId}`} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-[#D4AF37] hover:text-white transition-all" title="View Details">
