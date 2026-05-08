@@ -2,7 +2,7 @@ import React from 'react';
 import { FaWhatsapp } from "react-icons/fa";
 import { FaEnvelope, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
 import  { useRef } from 'react';
-import emailjs from '@emailjs/browser';
+import { API_BASE_URL } from '../../config';
 import Swal from 'sweetalert2';
 
 const ContactMe = () => {
@@ -11,6 +11,13 @@ const ContactMe = () => {
   const sendEmail = (e) => {
     e.preventDefault();
 
+    const formData = new FormData(form.current);
+    const data = {
+        from_name: formData.get('from_name'),
+        from_email: formData.get('from_email'),
+        message: formData.get('message')
+    };
+
     Swal.fire({
       title: 'Sending...',
       text: 'Please wait while we deliver your message.',
@@ -18,17 +25,27 @@ const ContactMe = () => {
       didOpen: () => Swal.showLoading()
     });
 
-    emailjs.sendForm('service_bkqeskg', 'template_q27r159', form.current, 'lfBV0ogI4aslzcoKx')
+    fetch(`${API_BASE_URL}/contact`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+      .then(res => res.json())
       .then((result) => {
-          Swal.fire({
-            title: 'Message Sent!',
-            text: 'We have received your message and will get back to you soon.',
-            icon: 'success',
-            confirmButtonColor: '#D4AF37'
-          });
-          form.current.reset();
-      }, (error) => {
-          console.error('EmailJS Error:', error);
+          if (result.success) {
+            Swal.fire({
+                title: 'Message Sent!',
+                text: 'We have received your message and will get back to you soon.',
+                icon: 'success',
+                confirmButtonColor: '#D4AF37'
+              });
+              form.current.reset();
+          } else {
+              throw new Error(result.error || 'Failed to send');
+          }
+      })
+      .catch((error) => {
+          console.error('Contact Error:', error);
           Swal.fire({
             title: 'Error',
             text: 'Failed to send message. Please try again or use WhatsApp.',
